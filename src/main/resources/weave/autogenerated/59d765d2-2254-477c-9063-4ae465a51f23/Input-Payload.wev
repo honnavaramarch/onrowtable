@@ -1,0 +1,4 @@
+%dw 2.0
+
+type auto_59d765d2_2254_477c_9063_4ae465a51f23_Input_Payload = Array<{|  Name: String,   employee_phone_no__c: String,   employee_salary__c: String,   employee_id__c: String|}>
+

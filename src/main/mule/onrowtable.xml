@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+	
+	<salesforce:sfdc-config name="Salesforce_Config1" doc:name="Salesforce Config" doc:id="6041546c-06c7-4e3a-8268-bb62fb192f10" >
+		<salesforce:basic-connection username="megha30@desh.nagesh" password="Godsake@30" securityToken="xdANBxkpZ8Os4AQAb2ooxsXk" />
+	</salesforce:sfdc-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="cc945359-499e-46e1-b245-5259574efa0d" >
+		<db:my-sql-connection host="mysqldb.c6yzm6urz1tp.us-east-1.rds.amazonaws.com" port="3306" user="admin" password="Godsake30" database="New_DB"/>
+	</db:config>
+	<flow name="onrowtableFlow" doc:id="167765c3-b7f3-4876-a7fc-3e3224c2b722" >
+		<db:listener table="employee" doc:name="On Table Row" doc:id="9c4c7a48-a56e-4be8-b7a3-37ac3fe04cd8" watermarkColumn="ModifiedDate" idColumn="ModifiedDate" config-ref="Database_Config">
+			<scheduling-strategy >
+				<fixed-frequency frequency="10" timeUnit="SECONDS"/>
+			</scheduling-strategy>
+		</db:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="b2f77680-44dc-4022-bfe7-5c9de3858baa" message="#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="be991ca5-1e8f-43de-8a04-6af67bf91670">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+[{
+	Name: payload.employee_name,
+	employee_phone_no__c: payload.employee_phone_no ,
+	employee_salary__c: payload.employee_salary ,
+	employee_id__c:  payload.employee_id 
+}]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<flow-ref doc:name="Flow Reference" doc:id="83160d5f-c4df-484a-88a9-c6bc84957a66" name="onrowtableSub_Flow"/>
+	</flow>
+	<sub-flow name="onrowtableSub_Flow" doc:id="59d765d2-2254-477c-9063-4ae465a51f23" >
+		<salesforce:upsert objectType="employee_profile__c" doc:name="Upsert" doc:id="19534115-e607-4d86-923b-7920b3304596" config-ref="Salesforce_Config1" externalIdFieldName="employee_id__c" />
+		<logger level="INFO" doc:name="Logger" doc:id="411e42a8-2a31-4ce2-8650-4eab23c8e5ee" message="#[payload]" />
+	</sub-flow>
+</mule>
